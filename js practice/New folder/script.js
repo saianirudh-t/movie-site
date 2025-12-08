@@ -42,9 +42,15 @@ async function loadMovies(endpoint, container) {
   })
 }
 
-loadMovies("trending/movie/week", trending)
-loadMovies("movie/popular", popular)
-loadMovies("movie/top_rated",toprated)
+const pageSections = [
+  { endpoint: "trending/movie/week", container: trending },
+  { endpoint: "movie/popular", container: popular },
+  { endpoint: "movie/top_rated", container: toprated }
+]
+pageSections.forEach(section => {
+  loadMovies(section.endpoint, section.container)
+})
+
 
 let seeMore=document.querySelector(".see-more")
 document.addEventListener("click",(e)=>{
