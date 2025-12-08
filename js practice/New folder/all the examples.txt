@@ -1,0 +1,128 @@
+all the examples
+
+Here are **ready-to-use `fetch()` requests for every popular, top rated, and trending endpoint** (Movies, TV, and People).
+Just replace:
+
+```js
+const baseUrl = "https://api.themoviedb.org/3";
+const apiKey = "YOUR_API_KEY";
+```
+
+---
+
+# 🎬 MOVIES — Fetch Requests
+
+```js
+// Popular Movies
+await fetch(`${baseUrl}/movie/popular?api_key=${apiKey}`);
+
+// Top Rated Movies
+await fetch(`${baseUrl}/movie/top_rated?api_key=${apiKey}`);
+
+// Now Playing Movies
+await fetch(`${baseUrl}/movie/now_playing?api_key=${apiKey}`);
+
+// Upcoming Movies
+await fetch(`${baseUrl}/movie/upcoming?api_key=${apiKey}`);
+
+// Trending Movies (Day)
+await fetch(`${baseUrl}/trending/movie/day?api_key=${apiKey}`);
+
+// Trending Movies (Week)
+await fetch(`${baseUrl}/trending/movie/week?api_key=${apiKey}`);
+
+// Trending Movies (Month)
+await fetch(`${baseUrl}/trending/movie/month?api_key=${apiKey}`);
+```
+
+---
+
+# 📺 TV SHOWS — Fetch Requests
+
+```js
+// Popular TV Shows
+await fetch(`${baseUrl}/tv/popular?api_key=${apiKey}`);
+
+// Top Rated TV Shows
+await fetch(`${baseUrl}/tv/top_rated?api_key=${apiKey}`);
+
+// TV Airing Today
+await fetch(`${baseUrl}/tv/airing_today?api_key=${apiKey}`);
+
+// TV On The Air
+await fetch(`${baseUrl}/tv/on_the_air?api_key=${apiKey}`);
+
+// Trending TV (Day)
+await fetch(`${baseUrl}/trending/tv/day?api_key=${apiKey}`);
+
+// Trending TV (Week)
+await fetch(`${baseUrl}/trending/tv/week?api_key=${apiKey}`);
+
+// Trending TV (Month)
+await fetch(`${baseUrl}/trending/tv/month?api_key=${apiKey}`);
+```
+
+---
+
+# 👥 PEOPLE — Fetch Requests
+
+```js
+// Popular People
+await fetch(`${baseUrl}/person/popular?api_key=${apiKey}`);
+
+// Trending People (Day)
+await fetch(`${baseUrl}/trending/person/day?api_key=${apiKey}`);
+
+// Trending People (Week)
+await fetch(`${baseUrl}/trending/person/week?api_key=${apiKey}`);
+
+// Trending People (Month)
+await fetch(`${baseUrl}/trending/person/month?api_key=${apiKey}`);
+```
+
+---
+
+# 📦 OPTIONAL: Wrap All Endpoints Into an Object
+
+If you prefer something structured:
+
+```js
+const endpoints = {
+  movies: {
+    popular: `${baseUrl}/movie/popular?api_key=${apiKey}`,
+    topRated: `${baseUrl}/movie/top_rated?api_key=${apiKey}`,
+    nowPlaying: `${baseUrl}/movie/now_playing?api_key=${apiKey}`,
+    upcoming: `${baseUrl}/movie/upcoming?api_key=${apiKey}`,
+    trendingDay: `${baseUrl}/trending/movie/day?api_key=${apiKey}`,
+    trendingWeek: `${baseUrl}/trending/movie/week?api_key=${apiKey}`,
+    trendingMonth: `${baseUrl}/trending/movie/month?api_key=${apiKey}`,
+  },
+  tv: {
+    popular: `${baseUrl}/tv/popular?api_key=${apiKey}`,
+    topRated: `${baseUrl}/tv/top_rated?api_key=${apiKey}`,
+    airingToday: `${baseUrl}/tv/airing_today?api_key=${apiKey}`,
+    onTheAir: `${baseUrl}/tv/on_the_air?api_key=${apiKey}`,
+    trendingDay: `${baseUrl}/trending/tv/day?api_key=${apiKey}`,
+    trendingWeek: `${baseUrl}/trending/tv/week?api_key=${apiKey}`,
+    trendingMonth: `${baseUrl}/trending/tv/month?api_key=${apiKey}`,
+  },
+  people: {
+    popular: `${baseUrl}/person/popular?api_key=${apiKey}`,
+    trendingDay: `${baseUrl}/trending/person/day?api_key=${apiKey}`,
+    trendingWeek: `${baseUrl}/trending/person/week?api_key=${apiKey}`,
+    trendingMonth: `${baseUrl}/trending/person/month?api_key=${apiKey}`,
+  }
+};
+```
+
+---
+
+If you want, I can also generate a **TMDB API service class** so you can call methods like:
+
+```js
+tmdb.getPopularMovies()
+tmdb.getTrendingTVWeek()
+tmdb.getPopularPeople()
+```
+
+Just tell me!
