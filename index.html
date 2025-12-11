@@ -19,7 +19,13 @@
             <input id="searchInput" type="text">
         </div>
     </nav>
-    <h3 class="containerHeading">Trending right now</h3>
+    <div class="trendingDropDown">
+        <h3 class="containerHeading">Trending right now</h3>
+        <select name="sortBy" id="sortBy">
+            <option value="week" selected>Week</option>
+            <option value="day">Day</option>
+        </select>
+    </div>
     <div class="carousel-wrapper">
         <button class="arrow left-arrow">&#10094;</button>
         <div id="trending" class="carousel"></div>

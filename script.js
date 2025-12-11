@@ -81,13 +81,13 @@ searchInput.addEventListener("input", () => {
 })
 
 const mainPage = [
-  { endpoint: "trending/movie/week", container: trending, heading:"Trending right now"},
-  { endpoint: "movie/popular", container: popular, heading:"Most popular among" },
-  { endpoint: "movie/top_rated", container: toprated, heading:"Top rated in IMDB" },
-  { endpoint: "trending/tv/week", container: trending,heading:"Trending right now"},
-  { endpoint: "tv/popular", container: popular,heading:"Most popular among" },
-  { endpoint: "tv/top_rated", container: toprated,heading:'Top rated in IMDB' },
-  {endpoint:"movie/upcoming", container:trending , heading:"upcoming movies"},
+  {endpoint: "trending/movie/week", container: trending, heading:"Trending right now"},
+  {endpoint: "movie/popular", container: popular, heading:"Most popular among" },
+  {endpoint: "movie/top_rated", container: toprated, heading:"Top rated in IMDB" },
+  {endpoint: "trending/tv/week", container: trending,heading:"Trending right now"},
+  {endpoint: "tv/popular", container: popular,heading:"Most popular among" },
+  {endpoint: "tv/top_rated", container: toprated,heading:'Top rated in IMDB' },
+  {endpoint:"movie/upcoming", container:trending , heading:"Upcoming movies"},
   {endpoint:"tv/on_the_air", container:popular , heading:"Latest on the air"},
   {endpoint:"movie/now_playing",container: toprated , heading:"In the theaters"}
 ]
@@ -102,16 +102,30 @@ function loadCategory(list) {
 
 loadCategory(mainPage.slice(0,3))
 
+let current="movie"
 moviesLink.addEventListener("click", () => {
+    sortBy[0].selected=true
+    sortBy.style.display="block"
+    current="movie"
     loadCategory(mainPage.slice(0,3))
 })
 
 seriesLink.addEventListener("click", () => {
+    sortBy[0].selected=true
+    sortBy.style.display="block"
+    current="tv"
     loadCategory(mainPage.slice(3,6))
 })
 
 upcomingLink.addEventListener('click',()=>{
     loadCategory(mainPage.slice(6,9))
+    sortBy.style.display="none"
+})
+
+let sortBy=document.getElementById("sortBy")
+sortBy.addEventListener('click',(e)=>{
+    let getVal=sortBy.value
+    loadContent(`trending/${current}/${getVal}`,trending)
 })
 
 document.addEventListener("click", (e) => {

@@ -86,6 +86,12 @@ nav .links a:hover::after{
 body>h3{
   margin-left:10px;
 }
+
+.trendingDropDown{
+  display:flex;
+  justify-content:space-between;
+  margin:0px 10px;
+}
 .carousel-wrapper {
   position: relative;
   display: flex;
