@@ -93,7 +93,7 @@ body>h3{
   width: 100%;
   overflow: hidden;
   margin: 10px 0;
-
+}
     .carousel {
       display: flex;
       gap: 15px;
@@ -105,7 +105,6 @@ body>h3{
     .carousel::-webkit-scrollbar {
       display: none;
     }
-}
 
 .arrow {
   position: absolute;
@@ -126,13 +125,13 @@ body>h3{
   backdrop-filter: blur(4px);
   transition: 0.25s ease;
   opacity: 0;
-
+}
 .carousel-wrapper:hover .arrow {
   opacity: 1;
 }
 
 .arrow:hover {
-  background: rgba(253, 3, 3, 0.25);
+  background: rgba(63, 63, 63, 0.25);
   color: #000;
   transform: translateY(-50%) scale(1.15);
   z-index: 10;
@@ -145,7 +144,7 @@ body>h3{
 .right-arrow {
   right: 10px;
 }
-}
+
 .movie-card {
   min-width: 250px;  
   max-width: 250px;

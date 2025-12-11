@@ -29,17 +29,22 @@ async function loadContent(endpoint, container) {
     const data = await response.json();
     data.results.forEach(item => {
         let title = item.title || item.name;
-        let card = document.createElement('div');
-        card.className = "movie-card";
-        card.innerHTML = `
-            <h2 class="movie-title">${title}</h2>
-            <img class="movie-poster" src="${imgBase + item.poster_path}" alt="${title}">
-            <p class="overview">${item.overview}</p>
-            <button class="see-more">See More</button>
-            <p class="rating">⭐ ${item.vote_average}</p>
-        `;
-        container.append(card);
+        let create=cardBuilder(title,item.poster_path,item.overview,item.vote_average)
+        container.append(create);
     });
+}
+
+function cardBuilder(title,poster,overview,rating){
+    let card = document.createElement('div')
+    card.className = "movie-card"
+    card.innerHTML = `
+        <h2 class="movie-title">${title}</h2>
+        <img class="movie-poster" src="${imgBase + poster}" alt="${title}">
+        <p class="overview">${overview}</p>
+        <button class="see-more">See More</button>
+        <p class="rating">⭐ ${rating}</p>
+    `
+    return card
 }
 
 function changeHeading(list) {
@@ -65,17 +70,8 @@ async function searchContent(query) {
     data.results.forEach(item => {
         if (!item.poster_path) return
         let title = item.title || item.name
-        let card = document.createElement("div")
-        card.className = "movie-card"
-        card.innerHTML = `
-            <h2 class="movie-title">${title}</h2>
-            <img class="movie-poster" src="${imgBase + item.poster_path}">
-            <p class="overview">${item.overview || "No description available"}</p>
-            <button class="see-more">See More</button>
-            <p class="rating">⭐ ${item.vote_average}</p>
-        `
-
-        trending.appendChild(card)
+        let create=cardBuilder(title,item.poster_path,item.overview,item.vote_average)
+        trending.appendChild(create)
     })
 }
 
@@ -84,23 +80,18 @@ searchInput.addEventListener("input", () => {
     searchContent(query)
 })
 
-const moviesPage = [
+const mainPage = [
   { endpoint: "trending/movie/week", container: trending, heading:"Trending right now"},
   { endpoint: "movie/popular", container: popular, heading:"Most popular among" },
-  { endpoint: "movie/top_rated", container: toprated, heading:"Top rated in IMDB" }
-]
-
-const seriesPage = [
+  { endpoint: "movie/top_rated", container: toprated, heading:"Top rated in IMDB" },
   { endpoint: "trending/tv/week", container: trending,heading:"Trending right now"},
   { endpoint: "tv/popular", container: popular,heading:"Most popular among" },
-  { endpoint: "tv/top_rated", container: toprated,heading:'Top rated in IMDB' }
-]
-
-const upcomingPage=[
+  { endpoint: "tv/top_rated", container: toprated,heading:'Top rated in IMDB' },
   {endpoint:"movie/upcoming", container:trending , heading:"upcoming movies"},
   {endpoint:"tv/on_the_air", container:popular , heading:"Latest on the air"},
   {endpoint:"movie/now_playing",container: toprated , heading:"In the theaters"}
 ]
+
 
 function loadCategory(list) {
     changeHeading(list)
@@ -109,26 +100,24 @@ function loadCategory(list) {
     });
 }
 
-
-loadCategory(moviesPage)
+loadCategory(mainPage.slice(0,3))
 
 moviesLink.addEventListener("click", () => {
-    loadCategory(moviesPage)
+    loadCategory(mainPage.slice(0,3))
 })
 
 seriesLink.addEventListener("click", () => {
-    loadCategory(seriesPage)
+    loadCategory(mainPage.slice(3,6))
 })
 
 upcomingLink.addEventListener('click',()=>{
-    loadCategory(upcomingPage)
+    loadCategory(mainPage.slice(6,9))
 })
 
 document.addEventListener("click", (e) => {
     if (e.target.classList.contains("see-more")) {
         const overview = e.target.previousElementSibling;
         overview.classList.toggle("expanded");
-
         e.target.textContent = 
             overview.classList.contains("expanded")
             ? "See Less"
