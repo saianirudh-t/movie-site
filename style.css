@@ -203,8 +203,8 @@ body>h3{
   border-radius: 5px;
   cursor: pointer;
   margin-bottom: 10px;
-    .see-more:hover {
-      background: #0056b3;
-    }
+}
+  .see-more:hover {
+    background: #0056b3;
   }
 
