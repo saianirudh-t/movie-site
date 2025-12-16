@@ -1,140 +1,201 @@
-const apiKey = "c4adbf461fa88d16eaa1a4795c66d730"
-const baseUrl = "https://api.themoviedb.org/3"
-const imgBase = "https://image.tmdb.org/t/p/w500"
+/* ================== CONFIG ================== */
+const apiKey = "c4adbf461fa88d16eaa1a4795c66d730";
+const baseUrl = "https://api.themoviedb.org/3";
+const imgBase = "https://image.tmdb.org/t/p/w500";
 
-const trending = document.getElementById("trending")
-const popular = document.getElementById("popular")
-const toprated = document.getElementById("topRated")
-const moviesLink = document.getElementById("moviesLink")
-const seriesLink = document.getElementById("seriesLink")
-const upcomingLink = document.getElementById("upcomingLink")
+/* ================== DOM ================== */
+const trending = document.getElementById("trending");
+const popular = document.getElementById("popular");
+const toprated = document.getElementById("topRated");
 
-document.querySelectorAll(".carousel-wrapper").forEach(wrapper => {
-    const carousel = wrapper.querySelector(".carousel");
-    const leftBtn  = wrapper.querySelector(".left-arrow");
-    const rightBtn = wrapper.querySelector(".right-arrow");
-    const scrollAmount = 300;
+const moviesLink = document.getElementById("moviesLink");
+const seriesLink = document.getElementById("seriesLink");
+const upcomingLink = document.getElementById("upcomingLink");
+const searchInput = document.getElementById("searchInput");
+const sortBy = document.getElementById("sortBy");
 
-    leftBtn.addEventListener("click", () => {
-        carousel.scrollLeft -= scrollAmount;
-    });
-    rightBtn.addEventListener("click", () => {
-        carousel.scrollLeft += scrollAmount;
-    });
-});
-
-async function loadContent(endpoint, container) {
-    container.innerHTML = "";
-    const response = await fetch(`${baseUrl}/${endpoint}?api_key=${apiKey}`);
-    const data = await response.json();
-    data.results.forEach(item => {
-        let title = item.title || item.name;
-        let create=cardBuilder(title,item.poster_path,item.overview,item.vote_average)
-        container.append(create);
-    });
+/* ================== AUTH HELPERS ================== */
+function getCurrentUser() {
+    return JSON.parse(localStorage.getItem("user"));
 }
 
-function cardBuilder(title,poster,overview,rating){
-    let card = document.createElement('div')
-    card.className = "movie-card"
+/* ================== WISHLIST HELPERS ================== */
+function getWishlistKey() {
+    const user = getCurrentUser();
+    return user ? `wishlist_${user.uid}` : null;
+}
+
+function getWishlist() {
+    const key = getWishlistKey();
+    return key ? JSON.parse(localStorage.getItem(key)) || [] : [];
+}
+
+function saveWishlist(list) {
+    const key = getWishlistKey();
+    if (key) localStorage.setItem(key, JSON.stringify(list));
+}
+
+/* ================== CAROUSEL ================== */
+document.querySelectorAll(".carousel-wrapper").forEach(wrapper => {
+    const carousel = wrapper.querySelector(".carousel");
+    wrapper.querySelector(".left-arrow").onclick = () => carousel.scrollLeft -= 300;
+    wrapper.querySelector(".right-arrow").onclick = () => carousel.scrollLeft += 300;
+});
+
+/* ================== CARD BUILDER ================== */
+function cardBuilder(title, poster, overview, rating) {
+
+    const user = getCurrentUser();
+    const wishlist = user ? getWishlist() : [];
+    const isWishlisted = wishlist.some(m => m.title === title);
+
+    const card = document.createElement("div");
+    card.className = "movie-card";
+
     card.innerHTML = `
         <h2 class="movie-title">${title}</h2>
-        <img class="movie-poster" src="${imgBase + poster}" alt="${title}">
+        <img class="movie-poster" src="${imgBase + poster}">
         <p class="overview">${overview}</p>
         <button class="see-more">See More</button>
         <p class="rating">⭐ ${rating}</p>
-    `
-    return card
+
+        <img 
+            class="wishlist-btn"
+            src="${isWishlisted ? "filled.svg" : "normal.svg"}"
+            data-title="${title}"
+            data-poster="${poster}"
+            data-overview="${overview}"
+            data-rating="${rating}"
+            style="opacity:${user ? 1 : 0.4}"
+            title="${user ? "Add to wishlist" : "Login required"}"
+        >
+    `;
+    return card;
 }
 
-function changeHeading(list) {
-    const headings = document.querySelectorAll(".containerHeading")
-    list.forEach((section, index) => {
-        headings[index].textContent = section.heading
-    })
-}
+/* ================== LOAD CONTENT ================== */
+async function loadContent(endpoint, container) {
+    container.innerHTML = "";
+    const res = await fetch(`${baseUrl}/${endpoint}?api_key=${apiKey}`);
+    const data = await res.json();
 
-const searchInput = document.getElementById("searchInput")
-
-async function searchContent(query) {
-    trending.innerHTML = ""  
-    popular.innerHTML = ""  
-    toprated.innerHTML = ""  
-    if (query.trim() === "") {
-        loadCategory(moviesPage)
-        return
-    }
-    const url = `${baseUrl}/search/multi?api_key=${apiKey}&query=${query}`
-    const response = await fetch(url)
-    const data = await response.json()
     data.results.forEach(item => {
-        if (!item.poster_path) return
-        let title = item.title || item.name
-        let create=cardBuilder(title,item.poster_path,item.overview,item.vote_average)
-        trending.appendChild(create)
-    })
-}
-
-searchInput.addEventListener("input", () => {
-    let query = searchInput.value
-    searchContent(query)
-})
-
-const mainPage = [
-  {endpoint: "trending/movie/week", container: trending, heading:"Trending right now"},
-  {endpoint: "movie/popular", container: popular, heading:"Most popular among" },
-  {endpoint: "movie/top_rated", container: toprated, heading:"Top rated in IMDB" },
-  {endpoint: "trending/tv/week", container: trending,heading:"Trending right now"},
-  {endpoint: "tv/popular", container: popular,heading:"Most popular among" },
-  {endpoint: "tv/top_rated", container: toprated,heading:'Top rated in IMDB' },
-  {endpoint:"movie/upcoming", container:trending , heading:"Upcoming movies"},
-  {endpoint:"tv/on_the_air", container:popular , heading:"Latest on the air"},
-  {endpoint:"movie/now_playing",container: toprated , heading:"In the theaters"}
-]
-
-
-function loadCategory(list) {
-    changeHeading(list)
-    list.forEach(section => {
-        loadContent(section.endpoint, section.container);
+        if (!item.poster_path) return;
+        const title = item.title || item.name;
+        container.append(
+            cardBuilder(title, item.poster_path, item.overview, item.vote_average)
+        );
     });
 }
 
-loadCategory(mainPage.slice(0,3))
+/* ================== SEARCH ================== */
+async function searchContent(query) {
+    trending.innerHTML = popular.innerHTML = toprated.innerHTML = "";
 
-let current="movie"
-moviesLink.addEventListener("click", () => {
-    sortBy[0].selected=true
-    sortBy.style.display="block"
-    current="movie"
-    loadCategory(mainPage.slice(0,3))
-})
+    if (!query.trim()) {
+        loadCategory(mainPage.slice(0, 3));
+        return;
+    }
 
-seriesLink.addEventListener("click", () => {
-    sortBy[0].selected=true
-    sortBy.style.display="block"
-    current="tv"
-    loadCategory(mainPage.slice(3,6))
-})
+    const res = await fetch(`${baseUrl}/search/multi?api_key=${apiKey}&query=${query}`);
+    const data = await res.json();
 
-upcomingLink.addEventListener('click',()=>{
-    loadCategory(mainPage.slice(6,9))
-    sortBy.style.display="none"
-})
+    data.results.forEach(item => {
+        if (!item.poster_path) return;
+        const title = item.title || item.name;
+        trending.append(
+            cardBuilder(title, item.poster_path, item.overview, item.vote_average)
+        );
+    });
+}
+searchInput.addEventListener("input", () => searchContent(searchInput.value));
 
-let sortBy=document.getElementById("sortBy")
-sortBy.addEventListener('click',(e)=>{
-    let getVal=sortBy.value
-    loadContent(`trending/${current}/${getVal}`,trending)
-})
+/* ================== PAGE DATA ================== */
+const mainPage = [
+    { endpoint: "trending/movie/week", container: trending, heading: "Trending right now" },
+    { endpoint: "movie/popular", container: popular, heading: "Most popular among" },
+    { endpoint: "movie/top_rated", container: toprated, heading: "Top rated in IMDB" },
 
+    { endpoint: "trending/tv/week", container: trending, heading: "Trending right now" },
+    { endpoint: "tv/popular", container: popular, heading: "Most popular among" },
+    { endpoint: "tv/top_rated", container: toprated, heading: "Top rated in IMDB" },
+
+    { endpoint: "movie/upcoming", container: trending, heading: "Upcoming movies" },
+    { endpoint: "tv/on_the_air", container: popular, heading: "Latest on the air" },
+    { endpoint: "movie/now_playing", container: toprated, heading: "In theaters" }
+];
+
+function changeHeading(list) {
+    document.querySelectorAll(".containerHeading")
+        .forEach((h, i) => h.textContent = list[i].heading);
+}
+
+function loadCategory(list) {
+    changeHeading(list);
+    list.forEach(s => loadContent(s.endpoint, s.container));
+}
+
+loadCategory(mainPage.slice(0, 3));
+
+/* ================== NAV ================== */
+let current = "movie";
+
+moviesLink.onclick = () => {
+    sortBy.style.display = "block";
+    sortBy.value = "week";
+    current = "movie";
+    loadCategory(mainPage.slice(0, 3));
+};
+
+seriesLink.onclick = () => {
+    sortBy.style.display = "block";
+    sortBy.value = "week";
+    current = "tv";
+    loadCategory(mainPage.slice(3, 6));
+};
+
+upcomingLink.onclick = () => {
+    sortBy.style.display = "none";
+    loadCategory(mainPage.slice(6, 9));
+};
+
+sortBy.onchange = () => {
+    loadContent(`trending/${current}/${sortBy.value}`, trending);
+};
+
+/* ================== GLOBAL CLICK ================== */
 document.addEventListener("click", (e) => {
     if (e.target.classList.contains("see-more")) {
-        const overview = e.target.previousElementSibling;
-        overview.classList.toggle("expanded");
-        e.target.textContent = 
-            overview.classList.contains("expanded")
-            ? "See Less"
-            : "See More";
+        const p = e.target.previousElementSibling;
+        p.classList.toggle("expanded");
+        e.target.textContent = p.classList.contains("expanded") ? "See Less" : "See More";
+    }
+
+    if (e.target.classList.contains("wishlist-btn")) {
+
+        const user = getCurrentUser();
+        if (!user) {
+            alert("Please login to use wishlist ❤️");
+            window.location.href = "login.html";
+            return;
+        }
+
+        let wishlist = getWishlist();
+        const movie = {
+            title: e.target.dataset.title,
+            poster: e.target.dataset.poster,
+            overview: e.target.dataset.overview,
+            rating: e.target.dataset.rating
+        };
+
+        const index = wishlist.findIndex(m => m.title === movie.title);
+        if (index === -1) {
+            wishlist.push(movie);
+            e.target.src = "filled.svg";
+        } else {
+            wishlist.splice(index, 1);
+            e.target.src = "normal.svg";
+        }
+        saveWishlist(wishlist);
     }
 });
