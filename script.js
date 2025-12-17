@@ -1,76 +1,27 @@
-import { auth } from "./firebase.js";
-import { signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
 
 /* ================== CONFIG ================== */
 const apiKey = "c4adbf461fa88d16eaa1a4795c66d730";
 const baseUrl = "https://api.themoviedb.org/3";
-const imgBase = "https://image.tmdb.org/t/p/w500";
-
-/* ================== AUTH ================== */
-
-function getCurrentUser() {
-    return JSON.parse(localStorage.getItem("user"));
-}
+let imgBase = "https://image.tmdb.org/t/p/w500";
 
 /* ================== DOM ================== */
+const containerHeading = document.querySelectorAll(".containerHeading")
 const trending = document.getElementById("trending");
 const popular = document.getElementById("popular");
 const toprated = document.getElementById("topRated");
 const authBtn = document.getElementById("authToggleBtn");
 
-/* ================== AUTH TOGGLE ================== */
-function updateAuthButton() {
-    authBtn.textContent = getCurrentUser() ? "Logout" : "Login";
-}
-
-authBtn.onclick = () => {
-    if (getCurrentUser()) {
-        signOut(auth).then(() => {
-            localStorage.removeItem("user");
-            resetWishlistUI();
-            updateAuthButton();
-            location.reload();
-        });
-    } else {
-        location.href = "login.html";
-    }
-};
-
-updateAuthButton();
-
-/* ================== WISHLIST HELPERS ================== */
-function getWishlistKey() {
-    const user = getCurrentUser();
-    return user ? `wishlist_${user.uid}` : null;
-}
-
-function getWishlist() {
-    const key = getWishlistKey();
-    return key ? JSON.parse(localStorage.getItem(key)) || [] : [];
-}
-
-function saveWishlist(list) {
-    const key = getWishlistKey();
-    if (key) localStorage.setItem(key, JSON.stringify(list));
-}
-
-function resetWishlistUI() {
-    document.querySelectorAll(".wishlist-btn").forEach(btn => {
-        btn.src = "normal.svg";
-        btn.style.opacity = "0.4";
-        btn.style.cursor = "not-allowed";
-    });
-}
-
-/* ================== CARD BUILDER ================== */
 function cardBuilder(title, poster, overview, rating) {
-
-    const user = getCurrentUser();
-    const wishlist = user ? getWishlist() : [];
-    const isWishlisted = wishlist.some(m => m.title === title);
 
     const card = document.createElement("div");
     card.className = "movie-card";
+    if (poster===""){
+        imgBase="placeholder.avif"
+    }
+    else{
+        imgBase="https://image.tmdb.org/t/p/w500"
+    }
 
     card.innerHTML = `
         <h2>${title}</h2>
@@ -104,13 +55,99 @@ async function loadContent(endpoint, container) {
     });
 }
 
-loadContent("trending/movie/week", trending);
-loadContent("movie/popular", popular);
-loadContent("movie/top_rated", toprated);
+/* ================== SEARCH ================== */
+async function searchContent(query) {
+    trending.innerHTML = popular.innerHTML = toprated.innerHTML = "";
+    if (!query.trim()) {
+        loadCategory(mainPage.slice(0, 3));
+        return;
+    }
+    sortBy.style.display="none"
+    changeHeading([{ heading: "Movies" }, { heading: "Web series" }, { heading: "Others" }])
+    const res = await fetch(`${baseUrl}/search/multi?api_key=${apiKey}&query=${query}`);
+    const data = await res.json()
+    data.results.forEach(item => {
+        const title = item.title || item.name || "Untitled";
 
-/* ================== GLOBAL CLICK ================== */
-document.addEventListener("click", e => {
+        const image =item.poster_path || item.backdrop_path || item.backdrop_path || item.profile_path || ""
+        console.log(image)
 
+        const getData = cardBuilder(
+            title,
+            image,
+            item.overview || "No description available",
+            item.vote_average ?? "N/A"
+        );
+
+        if (item.media_type === "movie") {
+            trending.append(getData);
+        } else if (item.media_type === "tv") {
+            popular.append(getData);
+        } else if (item.media_type === "person") {
+            toprated.append(getData);
+        }
+    });
+
+}
+searchInput.addEventListener("input", () => searchContent(searchInput.value));
+
+const mainPage = [
+    { endpoint: "trending/movie/week", container: trending, heading: "Trending right now" },
+    { endpoint: "movie/popular", container: popular, heading: "Most popular among" },
+    { endpoint: "movie/top_rated", container: toprated, heading: "Top rated in IMDB" },
+
+    { endpoint: "trending/tv/week", container: trending, heading: "Trending right now" },
+    { endpoint: "tv/popular", container: popular, heading: "Most popular among" },
+    { endpoint: "tv/top_rated", container: toprated, heading: "Top rated in IMDB" },
+
+    { endpoint: "movie/upcoming", container: trending, heading: "Upcoming movies" },
+    { endpoint: "tv/on_the_air", container: popular, heading: "Latest on the air" },
+    { endpoint: "movie/now_playing", container: toprated, heading: "In theaters" }
+];
+
+function changeHeading(list) {
+    containerHeading.forEach((h, i) => h.textContent = list[i].heading);
+}
+
+function loadCategory(list) {
+    changeHeading(list);
+    list.forEach(s => loadContent(s.endpoint, s.container));
+}
+
+loadCategory(mainPage.slice(0, 3));
+
+/* ================== NAV ================== */
+let current = "movie";
+
+moviesLink.onclick = () => {
+    sortBy.style.display = "block";
+    sortBy.value = "week";
+    current = "movie";
+    loadCategory(mainPage.slice(0, 3));
+};
+
+seriesLink.onclick = () => {
+    sortBy.style.display = "block";
+    sortBy.value = "week";
+    current = "tv";
+    loadCategory(mainPage.slice(3, 6));
+};
+
+upcomingLink.onclick = () => {
+    sortBy.style.display = "none";
+    loadCategory(mainPage.slice(6, 9));
+};
+
+sortBy.onchange = () => {
+    loadContent(`trending/${current}/${sortBy.value}`, trending);
+};
+
+document.addEventListener("click", (e) => {
+    if (e.target.classList.contains("see-more")) {
+        const p = e.target.previousElementSibling;
+        p.classList.toggle("expanded");
+        e.target.textContent = p.classList.contains("expanded") ? "See Less" : "See More";
+    }
     if (e.target.classList.contains("wishlist-btn")) {
         const user = getCurrentUser();
 
@@ -119,7 +156,6 @@ document.addEventListener("click", e => {
             location.href = "login.html";
             return;
         }
-
         let wishlist = getWishlist();
         const movie = {
             title: e.target.dataset.title,
@@ -127,7 +163,6 @@ document.addEventListener("click", e => {
             overview: e.target.dataset.overview,
             rating: e.target.dataset.rating
         };
-
         const index = wishlist.findIndex(m => m.title === movie.title);
 
         if (index === -1) {
@@ -137,7 +172,5 @@ document.addEventListener("click", e => {
             wishlist.splice(index, 1);
             e.target.src = "normal.svg";
         }
-
-        saveWishlist(wishlist);
     }
 });
