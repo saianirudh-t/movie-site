@@ -1,10 +1,16 @@
+
 const imgBase = "https://image.tmdb.org/t/p/w500";
 const container = document.getElementById("wishlistContainer");
 
-const user = JSON.parse(localStorage.getItem("user"));
+function getCurrentUser() {
+    return JSON.parse(localStorage.getItem("user"));
+}
+
+const user = getCurrentUser();
+
 if (!user) {
     alert("Login required");
-    window.location.href = "login.html";
+    location.href = "login.html";
 }
 
 const key = `wishlist_${user.uid}`;
@@ -29,7 +35,10 @@ wishlist.forEach(movie => {
     card.querySelector(".remove").onclick = () => {
         wishlist = wishlist.filter(m => m.title !== movie.title);
         localStorage.setItem(key, JSON.stringify(wishlist));
-        location.reload();
+
+        wishlist.length === 0
+            ? container.innerHTML = "<h3>No wishlist items ❤️</h3>"
+            : location.reload();
     };
 
     container.appendChild(card);

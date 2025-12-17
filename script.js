@@ -1,24 +1,42 @@
+import { auth } from "./firebase.js";
+import { signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 /* ================== CONFIG ================== */
 const apiKey = "c4adbf461fa88d16eaa1a4795c66d730";
 const baseUrl = "https://api.themoviedb.org/3";
 const imgBase = "https://image.tmdb.org/t/p/w500";
 
+/* ================== AUTH ================== */
+
+function getCurrentUser() {
+    return JSON.parse(localStorage.getItem("user"));
+}
+
 /* ================== DOM ================== */
 const trending = document.getElementById("trending");
 const popular = document.getElementById("popular");
 const toprated = document.getElementById("topRated");
+const authBtn = document.getElementById("authToggleBtn");
 
-const moviesLink = document.getElementById("moviesLink");
-const seriesLink = document.getElementById("seriesLink");
-const upcomingLink = document.getElementById("upcomingLink");
-const searchInput = document.getElementById("searchInput");
-const sortBy = document.getElementById("sortBy");
-
-/* ================== AUTH HELPERS ================== */
-function getCurrentUser() {
-    return JSON.parse(localStorage.getItem("user"));
+/* ================== AUTH TOGGLE ================== */
+function updateAuthButton() {
+    authBtn.textContent = getCurrentUser() ? "Logout" : "Login";
 }
+
+authBtn.onclick = () => {
+    if (getCurrentUser()) {
+        signOut(auth).then(() => {
+            localStorage.removeItem("user");
+            resetWishlistUI();
+            updateAuthButton();
+            location.reload();
+        });
+    } else {
+        location.href = "login.html";
+    }
+};
+
+updateAuthButton();
 
 /* ================== WISHLIST HELPERS ================== */
 function getWishlistKey() {
@@ -36,12 +54,13 @@ function saveWishlist(list) {
     if (key) localStorage.setItem(key, JSON.stringify(list));
 }
 
-/* ================== CAROUSEL ================== */
-document.querySelectorAll(".carousel-wrapper").forEach(wrapper => {
-    const carousel = wrapper.querySelector(".carousel");
-    wrapper.querySelector(".left-arrow").onclick = () => carousel.scrollLeft -= 300;
-    wrapper.querySelector(".right-arrow").onclick = () => carousel.scrollLeft += 300;
-});
+function resetWishlistUI() {
+    document.querySelectorAll(".wishlist-btn").forEach(btn => {
+        btn.src = "normal.svg";
+        btn.style.opacity = "0.4";
+        btn.style.cursor = "not-allowed";
+    });
+}
 
 /* ================== CARD BUILDER ================== */
 function cardBuilder(title, poster, overview, rating) {
@@ -54,27 +73,24 @@ function cardBuilder(title, poster, overview, rating) {
     card.className = "movie-card";
 
     card.innerHTML = `
-        <h2 class="movie-title">${title}</h2>
-        <img class="movie-poster" src="${imgBase + poster}">
+        <h2>${title}</h2>
+        <img src="${imgBase + poster}">
         <p class="overview">${overview}</p>
         <button class="see-more">See More</button>
-        <p class="rating">⭐ ${rating}</p>
+        <p>⭐ ${rating}</p>
 
-        <img 
-            class="wishlist-btn"
-            src="${isWishlisted ? "filled.svg" : "normal.svg"}"
-            data-title="${title}"
-            data-poster="${poster}"
-            data-overview="${overview}"
-            data-rating="${rating}"
-            style="opacity:${user ? 1 : 0.4}"
-            title="${user ? "Add to wishlist" : "Login required"}"
-        >
+        <img class="wishlist-btn"
+             src="${isWishlisted ? "filled.svg" : "normal.svg"}"
+             data-title="${title}"
+             data-poster="${poster}"
+             data-overview="${overview}"
+             data-rating="${rating}"
+             style="opacity:${user ? 1 : 0.4}">
     `;
     return card;
 }
 
-/* ================== LOAD CONTENT ================== */
+/* ================== LOAD MOVIES ================== */
 async function loadContent(endpoint, container) {
     container.innerHTML = "";
     const res = await fetch(`${baseUrl}/${endpoint}?api_key=${apiKey}`);
@@ -82,102 +98,25 @@ async function loadContent(endpoint, container) {
 
     data.results.forEach(item => {
         if (!item.poster_path) return;
-        const title = item.title || item.name;
         container.append(
-            cardBuilder(title, item.poster_path, item.overview, item.vote_average)
+            cardBuilder(item.title || item.name, item.poster_path, item.overview, item.vote_average)
         );
     });
 }
 
-/* ================== SEARCH ================== */
-async function searchContent(query) {
-    trending.innerHTML = popular.innerHTML = toprated.innerHTML = "";
-
-    if (!query.trim()) {
-        loadCategory(mainPage.slice(0, 3));
-        return;
-    }
-
-    const res = await fetch(`${baseUrl}/search/multi?api_key=${apiKey}&query=${query}`);
-    const data = await res.json();
-
-    data.results.forEach(item => {
-        if (!item.poster_path) return;
-        const title = item.title || item.name;
-        trending.append(
-            cardBuilder(title, item.poster_path, item.overview, item.vote_average)
-        );
-    });
-}
-searchInput.addEventListener("input", () => searchContent(searchInput.value));
-
-/* ================== PAGE DATA ================== */
-const mainPage = [
-    { endpoint: "trending/movie/week", container: trending, heading: "Trending right now" },
-    { endpoint: "movie/popular", container: popular, heading: "Most popular among" },
-    { endpoint: "movie/top_rated", container: toprated, heading: "Top rated in IMDB" },
-
-    { endpoint: "trending/tv/week", container: trending, heading: "Trending right now" },
-    { endpoint: "tv/popular", container: popular, heading: "Most popular among" },
-    { endpoint: "tv/top_rated", container: toprated, heading: "Top rated in IMDB" },
-
-    { endpoint: "movie/upcoming", container: trending, heading: "Upcoming movies" },
-    { endpoint: "tv/on_the_air", container: popular, heading: "Latest on the air" },
-    { endpoint: "movie/now_playing", container: toprated, heading: "In theaters" }
-];
-
-function changeHeading(list) {
-    document.querySelectorAll(".containerHeading")
-        .forEach((h, i) => h.textContent = list[i].heading);
-}
-
-function loadCategory(list) {
-    changeHeading(list);
-    list.forEach(s => loadContent(s.endpoint, s.container));
-}
-
-loadCategory(mainPage.slice(0, 3));
-
-/* ================== NAV ================== */
-let current = "movie";
-
-moviesLink.onclick = () => {
-    sortBy.style.display = "block";
-    sortBy.value = "week";
-    current = "movie";
-    loadCategory(mainPage.slice(0, 3));
-};
-
-seriesLink.onclick = () => {
-    sortBy.style.display = "block";
-    sortBy.value = "week";
-    current = "tv";
-    loadCategory(mainPage.slice(3, 6));
-};
-
-upcomingLink.onclick = () => {
-    sortBy.style.display = "none";
-    loadCategory(mainPage.slice(6, 9));
-};
-
-sortBy.onchange = () => {
-    loadContent(`trending/${current}/${sortBy.value}`, trending);
-};
+loadContent("trending/movie/week", trending);
+loadContent("movie/popular", popular);
+loadContent("movie/top_rated", toprated);
 
 /* ================== GLOBAL CLICK ================== */
-document.addEventListener("click", (e) => {
-    if (e.target.classList.contains("see-more")) {
-        const p = e.target.previousElementSibling;
-        p.classList.toggle("expanded");
-        e.target.textContent = p.classList.contains("expanded") ? "See Less" : "See More";
-    }
+document.addEventListener("click", e => {
 
     if (e.target.classList.contains("wishlist-btn")) {
-
         const user = getCurrentUser();
+
         if (!user) {
-            alert("Please login to use wishlist ❤️");
-            window.location.href = "login.html";
+            alert("Login required ❤️");
+            location.href = "login.html";
             return;
         }
 
@@ -190,6 +129,7 @@ document.addEventListener("click", (e) => {
         };
 
         const index = wishlist.findIndex(m => m.title === movie.title);
+
         if (index === -1) {
             wishlist.push(movie);
             e.target.src = "filled.svg";
@@ -197,6 +137,7 @@ document.addEventListener("click", (e) => {
             wishlist.splice(index, 1);
             e.target.src = "normal.svg";
         }
+
         saveWishlist(wishlist);
     }
 });
