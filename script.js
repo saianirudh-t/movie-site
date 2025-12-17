@@ -5,6 +5,12 @@ const apiKey = "c4adbf461fa88d16eaa1a4795c66d730";
 const baseUrl = "https://api.themoviedb.org/3";
 let imgBase = "https://image.tmdb.org/t/p/w500";
 
+/* ================== AUTH ================== */
+
+function getCurrentUser() {
+    return JSON.parse(localStorage.getItem("user"));
+}
+
 /* ================== DOM ================== */
 const containerHeading = document.querySelectorAll(".containerHeading")
 const trending = document.getElementById("trending");
@@ -13,7 +19,6 @@ const toprated = document.getElementById("topRated");
 const authBtn = document.getElementById("authToggleBtn");
 
 function cardBuilder(title, poster, overview, rating) {
-
     const card = document.createElement("div");
     card.className = "movie-card";
     if (poster===""){
@@ -24,20 +29,12 @@ function cardBuilder(title, poster, overview, rating) {
     }
 
     card.innerHTML = `
-        <h2>${title}</h2>
-        <img src="${imgBase + poster}">
+        <h2 class="movie-title">${title}</h2>
+        <img class="movie-poster" src="${imgBase + poster}">
         <p class="overview">${overview}</p>
         <button class="see-more">See More</button>
         <p>⭐ ${rating}</p>
-
-        <img class="wishlist-btn"
-             src="${isWishlisted ? "filled.svg" : "normal.svg"}"
-             data-title="${title}"
-             data-poster="${poster}"
-             data-overview="${overview}"
-             data-rating="${rating}"
-             style="opacity:${user ? 1 : 0.4}">
-    `;
+    `
     return card;
 }
 
@@ -172,5 +169,7 @@ document.addEventListener("click", (e) => {
             wishlist.splice(index, 1);
             e.target.src = "normal.svg";
         }
+
+        saveWishlist(wishlist);
     }
 });
