@@ -1,9 +1,10 @@
 /* ================== CONFIG ================== */
 const apiKey = "c4adbf461fa88d16eaa1a4795c66d730";
 const baseUrl = "https://api.themoviedb.org/3";
-const imgBase = "https://image.tmdb.org/t/p/w500";
+let imgBase = "https://image.tmdb.org/t/p/w500";
 
 /* ================== DOM ================== */
+const containerHeading = document.querySelectorAll(".containerHeading")
 const trending = document.getElementById("trending");
 const popular = document.getElementById("popular");
 const toprated = document.getElementById("topRated");
@@ -48,9 +49,14 @@ function cardBuilder(title, poster, overview, rating) {
     const user = getCurrentUser();
     const wishlist = user ? getWishlist() : [];
     const isWishlisted = wishlist.some(m => m.title === title);
-
     const card = document.createElement("div");
     card.className = "movie-card";
+    if (poster===""){
+        imgBase="placeholder.avif"
+    }
+    else{
+        imgBase="https://image.tmdb.org/t/p/w500"
+    }
 
     card.innerHTML = `
         <h2 class="movie-title">${title}</h2>
@@ -91,26 +97,39 @@ async function loadContent(endpoint, container) {
 /* ================== SEARCH ================== */
 async function searchContent(query) {
     trending.innerHTML = popular.innerHTML = toprated.innerHTML = "";
-
     if (!query.trim()) {
         loadCategory(mainPage.slice(0, 3));
         return;
     }
-
+    sortBy.style.display="none"
+    changeHeading([{ heading: "Movies" }, { heading: "Web series" }, { heading: "Others" }])
     const res = await fetch(`${baseUrl}/search/multi?api_key=${apiKey}&query=${query}`);
-    const data = await res.json();
-
+    const data = await res.json()
     data.results.forEach(item => {
-        if (!item.poster_path) return;
-        const title = item.title || item.name;
-        trending.append(
-            cardBuilder(title, item.poster_path, item.overview, item.vote_average)
+        const title = item.title || item.name || "Untitled";
+
+        const image =item.poster_path || item.backdrop_path || item.backdrop_path || item.profile_path || ""
+        console.log(image)
+
+        const getData = cardBuilder(
+            title,
+            image,
+            item.overview || "No description available",
+            item.vote_average ?? "N/A"
         );
+
+        if (item.media_type === "movie") {
+            trending.append(getData);
+        } else if (item.media_type === "tv") {
+            popular.append(getData);
+        } else if (item.media_type === "person") {
+            toprated.append(getData);
+        }
     });
+
 }
 searchInput.addEventListener("input", () => searchContent(searchInput.value));
 
-/* ================== PAGE DATA ================== */
 const mainPage = [
     { endpoint: "trending/movie/week", container: trending, heading: "Trending right now" },
     { endpoint: "movie/popular", container: popular, heading: "Most popular among" },
@@ -126,8 +145,7 @@ const mainPage = [
 ];
 
 function changeHeading(list) {
-    document.querySelectorAll(".containerHeading")
-        .forEach((h, i) => h.textContent = list[i].heading);
+    containerHeading.forEach((h, i) => h.textContent = list[i].heading);
 }
 
 function loadCategory(list) {
@@ -163,14 +181,12 @@ sortBy.onchange = () => {
     loadContent(`trending/${current}/${sortBy.value}`, trending);
 };
 
-/* ================== GLOBAL CLICK ================== */
 document.addEventListener("click", (e) => {
     if (e.target.classList.contains("see-more")) {
         const p = e.target.previousElementSibling;
         p.classList.toggle("expanded");
         e.target.textContent = p.classList.contains("expanded") ? "See Less" : "See More";
     }
-
     if (e.target.classList.contains("wishlist-btn")) {
 
         const user = getCurrentUser();
@@ -179,7 +195,6 @@ document.addEventListener("click", (e) => {
             window.location.href = "login.html";
             return;
         }
-
         let wishlist = getWishlist();
         const movie = {
             title: e.target.dataset.title,
@@ -187,7 +202,6 @@ document.addEventListener("click", (e) => {
             overview: e.target.dataset.overview,
             rating: e.target.dataset.rating
         };
-
         const index = wishlist.findIndex(m => m.title === movie.title);
         if (index === -1) {
             wishlist.push(movie);
