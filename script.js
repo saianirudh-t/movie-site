@@ -1,3 +1,4 @@
+
 /* ================== CONFIG ================== */
 const apiKey = "c4adbf461fa88d16eaa1a4795c66d730";
 const baseUrl = "https://api.themoviedb.org/3";
