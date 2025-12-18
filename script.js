@@ -1,55 +1,24 @@
 
+
 /* ================== CONFIG ================== */
 const apiKey = "c4adbf461fa88d16eaa1a4795c66d730";
 const baseUrl = "https://api.themoviedb.org/3";
 let imgBase = "https://image.tmdb.org/t/p/w500";
+
+/* ================== AUTH ================== */
+
+function getCurrentUser() {
+    return JSON.parse(localStorage.getItem("user"));
+}
 
 /* ================== DOM ================== */
 const containerHeading = document.querySelectorAll(".containerHeading")
 const trending = document.getElementById("trending");
 const popular = document.getElementById("popular");
 const toprated = document.getElementById("topRated");
+const authBtn = document.getElementById("authToggleBtn");
 
-const moviesLink = document.getElementById("moviesLink");
-const seriesLink = document.getElementById("seriesLink");
-const upcomingLink = document.getElementById("upcomingLink");
-const searchInput = document.getElementById("searchInput");
-const sortBy = document.getElementById("sortBy");
-
-/* ================== AUTH HELPERS ================== */
-function getCurrentUser() {
-    return JSON.parse(localStorage.getItem("user"));
-}
-
-/* ================== WISHLIST HELPERS ================== */
-function getWishlistKey() {
-    const user = getCurrentUser();
-    return user ? `wishlist_${user.uid}` : null;
-}
-
-function getWishlist() {
-    const key = getWishlistKey();
-    return key ? JSON.parse(localStorage.getItem(key)) || [] : [];
-}
-
-function saveWishlist(list) {
-    const key = getWishlistKey();
-    if (key) localStorage.setItem(key, JSON.stringify(list));
-}
-
-/* ================== CAROUSEL ================== */
-document.querySelectorAll(".carousel-wrapper").forEach(wrapper => {
-    const carousel = wrapper.querySelector(".carousel");
-    wrapper.querySelector(".left-arrow").onclick = () => carousel.scrollLeft -= 300;
-    wrapper.querySelector(".right-arrow").onclick = () => carousel.scrollLeft += 300;
-});
-
-/* ================== CARD BUILDER ================== */
 function cardBuilder(title, poster, overview, rating) {
-
-    const user = getCurrentUser();
-    const wishlist = user ? getWishlist() : [];
-    const isWishlisted = wishlist.some(m => m.title === title);
     const card = document.createElement("div");
     card.className = "movie-card";
     if (poster===""){
@@ -64,23 +33,12 @@ function cardBuilder(title, poster, overview, rating) {
         <img class="movie-poster" src="${imgBase + poster}">
         <p class="overview">${overview}</p>
         <button class="see-more">See More</button>
-        <p class="rating">⭐ ${rating}</p>
-
-        <img 
-            class="wishlist-btn"
-            src="${isWishlisted ? "filled.svg" : "normal.svg"}"
-            data-title="${title}"
-            data-poster="${poster}"
-            data-overview="${overview}"
-            data-rating="${rating}"
-            style="opacity:${user ? 1 : 0.4}"
-            title="${user ? "Add to wishlist" : "Login required"}"
-        >
-    `;
+        <p>⭐ ${rating}</p>
+    `
     return card;
 }
 
-/* ================== LOAD CONTENT ================== */
+/* ================== LOAD MOVIES ================== */
 async function loadContent(endpoint, container) {
     container.innerHTML = "";
     const res = await fetch(`${baseUrl}/${endpoint}?api_key=${apiKey}`);
@@ -88,9 +46,8 @@ async function loadContent(endpoint, container) {
 
     data.results.forEach(item => {
         if (!item.poster_path) return;
-        const title = item.title || item.name;
         container.append(
-            cardBuilder(title, item.poster_path, item.overview, item.vote_average)
+            cardBuilder(item.title || item.name, item.poster_path, item.overview, item.vote_average)
         );
     });
 }
@@ -188,11 +145,11 @@ document.addEventListener("click", (e) => {
         e.target.textContent = p.classList.contains("expanded") ? "See Less" : "See More";
     }
     if (e.target.classList.contains("wishlist-btn")) {
-
         const user = getCurrentUser();
+
         if (!user) {
-            alert("Please login to use wishlist ❤️");
-            window.location.href = "login.html";
+            alert("Login required ❤️");
+            location.href = "login.html";
             return;
         }
         let wishlist = getWishlist();
@@ -203,6 +160,7 @@ document.addEventListener("click", (e) => {
             rating: e.target.dataset.rating
         };
         const index = wishlist.findIndex(m => m.title === movie.title);
+
         if (index === -1) {
             wishlist.push(movie);
             e.target.src = "filled.svg";
@@ -210,6 +168,7 @@ document.addEventListener("click", (e) => {
             wishlist.splice(index, 1);
             e.target.src = "normal.svg";
         }
+
         saveWishlist(wishlist);
     }
 });
