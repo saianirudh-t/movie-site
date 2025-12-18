@@ -110,7 +110,6 @@ async function searchContent(query) {
         const title = item.title || item.name || "Untitled";
 
         const image =item.poster_path || item.backdrop_path || item.backdrop_path || item.profile_path || ""
-        console.log(image)
 
         const getData = cardBuilder(
             title,
