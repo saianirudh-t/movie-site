@@ -5,11 +5,22 @@ const apiKey = "c4adbf461fa88d16eaa1a4795c66d730";
 const baseUrl = "https://api.themoviedb.org/3";
 let imgBase = "https://image.tmdb.org/t/p/w500";
 
-/* ================== AUTH ================== */
 
-function getCurrentUser() {
-    return JSON.parse(localStorage.getItem("user"));
-}
+
+document.querySelectorAll(".carousel-wrapper").forEach(wrapper => {
+    const carousel = wrapper.querySelector(".carousel");
+    const leftBtn  = wrapper.querySelector(".left-arrow");
+    const rightBtn = wrapper.querySelector(".right-arrow");
+    const scrollAmount = 300;
+
+    leftBtn.addEventListener("click", () => {
+        carousel.scrollLeft -= scrollAmount;
+    });
+    rightBtn.addEventListener("click", () => {
+        carousel.scrollLeft += scrollAmount;
+    });
+});
+
 
 /* ================== DOM ================== */
 const containerHeading = document.querySelectorAll(".containerHeading")
@@ -144,31 +155,4 @@ document.addEventListener("click", (e) => {
         p.classList.toggle("expanded");
         e.target.textContent = p.classList.contains("expanded") ? "See Less" : "See More";
     }
-    if (e.target.classList.contains("wishlist-btn")) {
-        const user = getCurrentUser();
-
-        if (!user) {
-            alert("Login required ❤️");
-            location.href = "login.html";
-            return;
-        }
-        let wishlist = getWishlist();
-        const movie = {
-            title: e.target.dataset.title,
-            poster: e.target.dataset.poster,
-            overview: e.target.dataset.overview,
-            rating: e.target.dataset.rating
-        };
-        const index = wishlist.findIndex(m => m.title === movie.title);
-
-        if (index === -1) {
-            wishlist.push(movie);
-            e.target.src = "filled.svg";
-        } else {
-            wishlist.splice(index, 1);
-            e.target.src = "normal.svg";
-        }
-
-        saveWishlist(wishlist);
-    }
-});
+})
