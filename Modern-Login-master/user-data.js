@@ -11,10 +11,10 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    appId: "XXXX"
+  apiKey: "AIzaSyA__lCYS2zaqlwMVHSMBoRReSxxzhVt7v8",
+  authDomain: "hello-12b65.firebaseapp.com",
+  projectId: "hello-12b65",
+    appId: "1:1012593603162:web:622d4d3d4ece5332715e63"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -22,6 +22,12 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 let currentUser;
+
+const userForm = document.getElementById("userForm");
+const firstName = document.getElementById("firstName");
+const lastName = document.getElementById("lastName");
+const logoutBtn = document.getElementById("logoutBtn");
+
 
 // 🔐 Protect page
 onAuthStateChanged(auth, (user) => {
@@ -32,16 +38,32 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-// 💾 Save user details
 userForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    await updateDoc(doc(db, "users", currentUser.uid), {
+  if (!currentUser) {
+    alert("User not logged in");
+    return;
+  }
+
+  try {
+    await setDoc(
+      doc(db, "users", currentUser.uid),
+      {
         firstName: firstName.value,
-        lastName: lastName.value
-    });
+        lastName: lastName.value,
+        email: currentUser.email,
+        updatedAt: new Date()
+      },
+      { merge: true }
+    );
 
-    alert("User data saved!");
+    alert("User data saved successfully!");
+    userForm.reset();
+  } catch (error) {
+    console.error("Error saving data:", error);
+    alert("Error saving data");
+  }
 });
 
 // 🚪 Logout

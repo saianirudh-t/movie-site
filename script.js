@@ -29,6 +29,7 @@ const popular = document.getElementById("popular");
 const toprated = document.getElementById("topRated");
 const authBtn = document.getElementById("authToggleBtn");
 
+/* ================== CARD BUILDER ================== */
 function cardBuilder(title, poster, overview, rating) {
     const card = document.createElement("div");
     card.className = "movie-card";
@@ -44,10 +45,26 @@ function cardBuilder(title, poster, overview, rating) {
         <img class="movie-poster" src="${imgBase + poster}">
         <p class="overview">${overview}</p>
         <button class="see-more">See More</button>
-        <p>⭐ ${rating}</p>
+        <div class="favorite">
+            <img class="star-icon" src="normal.svg">
+            <p>⭐ ${rating}</p>
+        </div>
     `
     return card;
 }
+
+document.addEventListener("click", (e) => {
+    const favorite = e.target.closest(".favorite");
+    if (!favorite) return;
+
+    const star = favorite.querySelector(".star-icon");
+    if (!star) return;
+
+    const isActive = star.classList.toggle("active");
+    star.src = isActive ? "filled.svg" : "normal.svg";
+});
+
+
 
 /* ================== LOAD MOVIES ================== */
 async function loadContent(endpoint, container) {
